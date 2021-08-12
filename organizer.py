@@ -1,15 +1,10 @@
-import sys, getopt
-import os
-#from os import name, sep, getcwd
-#from os.path import isdir
+import sys, getopt, os
 from elevate import elevate
-from pathvalidate import is_valid_filename
 from working_dir import WorkingDirs
-from music_lib.track import Track
 from music_lib.library import Library
 
 ERR_ARGS = "ERROR: Invalid arguments"
-ERR_DIRS = "ERROR: Invalid source or destination directory"
+ERR_DIRS = "ERROR: Invalid/Missing source or destination directory"
 ERR_PERMISSION = "ERROR: Can not gain required privileges. Try running the program again as administrator"
 
 # dest_dirname =  sep + "Organized Music"
@@ -32,7 +27,9 @@ class MusicOrganizer:
                 self.dest = arg
         
         if self.src == '':
-            self.src = os.getcwd()
+            print(ERR_DIRS)
+            input("Press any key to exit")
+            sys.exit(3)
         if self.dest == '':
             self.dest = self.src + self.dest_dirname
 
@@ -45,20 +42,16 @@ class MusicOrganizer:
     def main(self, argv):
         if os.name == 'nt':
             elevate()
-        os.system("color")
-        warningcolor = '\033[91m'
-        colorend = '\033[0m'
+        # os.system("color")
+        # warningcolor = '\033[91m'
+        # colorend = '\033[0m'
         directories = self.handle_args(argv)
         library = Library(directories.src, directories.dest)
         try:
             library.create_hardlinks()
         except Exception as e:
             print(e)
-        input("Press any key to close")
-        # track = Track("mp3", "GOMD", "J. Cole", "Forest Hill Drive", "1")
-        # print(track.gen_symlink_path(directories.dest))
-        # print('...')
-        
+        input("Press any key to close")        
 
 
 
