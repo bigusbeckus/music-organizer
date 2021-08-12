@@ -11,6 +11,12 @@ Folder name can be changed by modifying the `dest_dirname` variable in the `orga
 
 Future versions will add support for custom folders and such without having to edit anything...and will be less of a mess.
 
+## TODO
+* Cleanup. Lots and lots of cleanup
+* Command interface improvements
+* `--help` argument
+* Make an actual GUI maybe
+
 ## Supported formats
 
 * `.aac`
