@@ -1,41 +1,12 @@
-# POSSIBLE STRUCTURES
-# ========================================
-#
-#  1.  Artist -> Track
-#       /Music
-#          /Artist
-#              01 - Song.flac
-#              02 - Song.flac
-#          08 - Song.ogg
-#          09 - Song.ogg
-#
-#  2.  Artist -> Album -> Track
-#       /Music
-#          /Artist
-#              /Album
-#                  01 - Song.mp3
-#                  02 - Song.mp3
-#
-#  3.  Artist -> Album -> Disc # -> Track
-#       /Music
-#          /Artist
-#              /Album
-#                  /Disc 1
-#                      01 - Song.mp3
-#                      02 - Song.mp3
-#                  /Disc 2
-#                      01 - Song.mp3
-#                      02 - Song.mp3
-
 from genericpath import exists
 from os import link, mkdir, listdir, link
 from os.path import join, isdir
 from typing import List
 from music_lib.track import Track
+from music_lib.hierarchy import Hierarchy 
 
 import pathlib
 import music_tag
-
 class Library:
     SUPPORTED_FORMATS = [
         ".aac",
@@ -53,12 +24,17 @@ class Library:
     src: str
     dest: str
 
-    def __init__(self, src, dest):
+    folder_hierarchy: Hierarchy
+
+    def __init__(self, src, dest, folder_hierarchy = Hierarchy.ARTIST_TRACK):
         self.src = src
         self.dest = dest
-        self.read_music(self.src)
+        self.folder_hierarchy = folder_hierarchy
+        # self.read_music(self.src)
 
-    def read_music(self, __src):
+    def read_music(self, __src = None):
+        if __src is None:
+            __src = self.src
         if not exists(join(__src, ".ignore")):
             for d in listdir(__src):
                 current = join(__src, d)
@@ -88,13 +64,17 @@ class Library:
         if not isdir(self.dest):
             mkdir(self.dest)
         for track in self.tracks:
-            linkpath = join(self.dest, track.artist)
+            linkpath = join(self.dest, track.artist) # dest/Artist
             if not isdir(linkpath):
                 mkdir(linkpath)
-            if track.album:
-                linkpath = join(linkpath, track.album)
+            if track.album and self.folder_hierarchy in (Hierarchy.ARTIST_ALBUM_TRACK, Hierarchy.ARTIST_ALBUM_DISC_TRACK):
+                linkpath = join(linkpath, track.album) # dest/Artist/Album
                 if not isdir(linkpath):
                     mkdir(linkpath)
-            linkpath = join(linkpath, track.gen_hardlink_name())
+                if track.disc_number and self.folder_hierarchy == Hierarchy.ARTIST_ALBUM_DISC_TRACK:
+                    linkpath = join(linkpath, f"Disc {track.disc_number}") # dest/Artist/Album/Disc #
+                    if not isdir(linkpath):
+                        mkdir(linkpath)
+            linkpath = join(linkpath, track.gen_hardlink_name()) # dest/Artist/<Album/Disc #>/Track
             if not exists(linkpath):
                 link(track.src_file, linkpath)
